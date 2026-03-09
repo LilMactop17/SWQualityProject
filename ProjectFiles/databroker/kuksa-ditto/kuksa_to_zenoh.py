@@ -20,7 +20,7 @@ async def main():
 
             for path, data_point in updates.items(): #path is the VSS string, data_point is the value for the string
                 if data_point is not None:
-                    zenoh_key = path.replace(".", "/").lower()
+                    zenoh_key = path.replace(".", "/")
                     z_session.put(zenoh_key, str(data_point.value))
                     print(f"Zenoh Pub -> {zenoh_key}: {data_point.value}")
 
