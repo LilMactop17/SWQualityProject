@@ -26,7 +26,7 @@ venv\Scripts\activate
 ```
 Run
 ```
-python send_obd_data_to_kuksa.py
+python kuksa_to_zenoh.py
 ```
 Keep this window running
 # 5.
@@ -38,6 +38,6 @@ venv\Scripts\activate
 ```
 Run
 ```
-python kuksa_to_zenoh.py
+python zenoh_to_ditto.py
 ```
 Keep this window running
