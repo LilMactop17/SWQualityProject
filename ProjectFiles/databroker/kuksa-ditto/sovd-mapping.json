@@ -1,0 +1,25 @@
+{
+  "self": "/v1/diagnostic-data",
+  "data": [
+    {
+      "id": "VehicleSpeed",
+      "vssPath": "Vehicle.OBD.VehicleSpeed",
+      "unit": "km/h"
+    },
+    {
+      "id": "EngineSpeed",
+      "vssPath": "Vehicle.OBD.EngineSpeed",
+      "unit": "rpm"
+    },
+    {
+      "id": "CoolantTemperature",
+      "vssPath": "Vehicle.OBD.CoolantTemperature",
+      "unit": "C"
+    },
+    {
+      "id": "ThrottlePosition",
+      "vssPath": "Vehicle.OBD.ThrottlePosition",
+      "unit": "rpm"
+    }
+  ]
+}
