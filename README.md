@@ -8,6 +8,14 @@ Run
 # 3.
 Open a new command prompt
 cd into the kuksa-ditto folder
+Initialize the Virutal Environment using
+```
+python -m venv venv
+```
+Install the necessary Libraries using
+```
+pip install -r requirements.txt
+```
 Activate the virutal environment using
 ```
 venv\Scripts\activate
