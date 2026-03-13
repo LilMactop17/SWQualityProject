@@ -48,5 +48,14 @@ venv\Scripts\activate
 Run
 ```
 python zenoh_to_ditto.py
+
+
+
+git clone https://github.com/LilMactop17/SWQualityProject.git
+cd SWQualityProject
+
+docker build -t sw-quality-app .
+
+docker run -p 8080:8080 --name sw-project-instance sw-quality-app
 ```
 Keep this window running
