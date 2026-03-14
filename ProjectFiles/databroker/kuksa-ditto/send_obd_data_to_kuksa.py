@@ -8,7 +8,7 @@ from kuksa_client.grpc import Datapoint
 async def main():
     
     # Establish an asynchronous connection to the Kuksa Databroker at the IP: 127.0.0.1 and port 55555
-    async with VSSClient('127.0.0.1', 55555) as client:
+    async with VSSClient('databroker', 55555) as client:
 
         # Repeat Infinitely
         while True:
@@ -31,7 +31,7 @@ async def main():
             print('Vehicle Speed = ' , VehicleSpeed)
             print('Engine Speed = ' , EngineSpeed)
             print('Throttle Position = ' , ThrottlePosition)
-            print('coolant Temperature = ' , CoolantTemperature)
+            print('Coolant Temperature = ' , CoolantTemperature)
 
             # Pause for 1 second
             time.sleep(1)

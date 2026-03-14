@@ -92,7 +92,7 @@ def put_feature_value(thingID, feature, value):
 # Asynchronous main function to connect to Kuksa Databroker and retrieve OBD data
 async def main():
     # Establish an asynchronous connection to the Kuksa Databroker at the IP: 127.0.0.1 and port 55555
-    async with VSSClient('127.0.0.1', 55555) as client:
+    async with VSSClient('databroker', 55555) as client:
 
     # Repeat Infinitely
         while True:

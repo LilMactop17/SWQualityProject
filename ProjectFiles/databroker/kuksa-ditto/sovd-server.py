@@ -3,7 +3,7 @@ from kuksa_client.grpc import VSSClient
 
 app = Flask(__name__)
 
-KUKSA_IP = "127.0.0.1"
+KUKSA_IP = "databroker"
 KUKSA_PORT = 55555
 @app.route('/')
 def home():

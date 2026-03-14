@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # The Brain: Kuksa Databroker
+  databroker:
+    image: ghcr.io/eclipse-kuksa/kuksa-databroker:main
+    container_name: databroker
+    ports:
+      - "55555:55555"
+    volumes:
+      - ./ProjectFiles/databroker/OBD.json:/app/OBD.json
+    command: --insecure --address 0.0.0.0 --port 55555 --metadata /app/OBD.json
+
+  # The Simulator: Sends data to Databroker
+  data-sender:
+    build: .
+    container_name: data-sender
+    depends_on:
+      - databroker
+    command: python3 /app/kuksa-ditto/send_obd_data_to_kuksa.py
+    environment:
+      - KUKSA_HOST=databroker
+
+  # The Gateway: Your SoVD API
+  sovd-server:
+    build: .
+    container_name: sovd-server
+    ports:
+      - "8888:8081"
+    depends_on:
+      - databroker
+    command: python3 /app/kuksa-ditto/sovd-server.py
+    environment:
+      - KUKSA_HOST=databroker
+
+  # The Bridge: Kuksa to Zenoh (if separate)
+  zenoh-bridge:
+    build: .
+    container_name: zenoh-bridge
+    depends_on:
+      - databroker
+    command: python3 /app/kuksa-ditto/kuksa_to_zenoh.py

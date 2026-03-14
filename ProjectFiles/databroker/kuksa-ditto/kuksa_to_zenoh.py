@@ -9,7 +9,7 @@ async def main():
     z_session = zenoh.open(conf)
 
     print("Connecting to Kuksa Databroker...")
-    async with VSSClient('127.0.0.1', 55555) as kuksa_client:
+    async with VSSClient('databroker', 55555) as kuksa_client:
         while True:
             updates = await kuksa_client.get_current_values([
                 'Vehicle.OBD.VehicleSpeed',

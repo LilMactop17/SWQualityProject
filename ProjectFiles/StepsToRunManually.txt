@@ -1,0 +1,15 @@
+Build Docker image: docker build -t obd-system .
+
+Run docker image using: databroker --address 0.0.0.0 --port 55555 --metadata /app/config/OBD.json
+
+Open a Second Terminal 
+Activate Bash Shell: docker exec -it obd-system /bin/sh
+In the bash shell (starts with #), run: python3 /app/kuksa-ditto/send_obd_data_to_kuksa.py
+
+Open a Third Terminal 
+Activate Bash Shell: docker exec -it obd-system /bin/sh
+In the bash shell (starts with #), run: /app/kuksa-ditto/kuksa_to_zenoh.py
+
+Open a Fourth Terminal 
+Activate Bash Shell: docker exec -it obd-system /bin/sh
+In the bash shell (starts with #), run: /app/kuksa-ditto/zenoh_to_ditto.py
