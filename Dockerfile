@@ -1,7 +1,6 @@
-# Step 1: Build the Rust Data Broker
+# ---------- Stage 1: Rust builder ----------
 FROM rust:1.82-slim AS builder
 
-# Install system dependencies required for compilation
 RUN apt-get update && apt-get install -y \
     pkg-config \
     libssl-dev \
@@ -11,46 +10,61 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
-
-# 1. Copy everything (including the Project/ folder)
-COPY . .
-
-# 2. Move into the actual project root where Cargo.toml lives
 WORKDIR /app/ProjectFiles
 
-# 3. THE PROTO FIX: 
-# Pointing specifically to the internal proto directory so 'sdv/...' 
-# imports resolve correctly relative to /app/Project/proto
-ENV PROTOC_INCLUDE=/app/ProjectFiles/databroker-proto
-ENV PROTOC_ARGS="-I /app/ProjectFiles/databroker-proto"
+# Copy manifest files first for better caching
+COPY ProjectFiles/Cargo.toml ProjectFiles/Cargo.lock ./
+COPY ProjectFiles/databroker/Cargo.toml ./databroker/
+COPY ProjectFiles/databroker-proto/Cargo.toml ./databroker-proto/
 
-# 4. Build the release binary
-# This handles the heavy lifting of compiling Tonic, Tokio, etc.
+# If you have other workspace crates, copy their Cargo.toml files too
+# COPY ProjectFiles/other-crate/Cargo.toml ./other-crate/
+
+# Create dummy source files so cargo can build dependencies
+RUN mkdir -p databroker/src databroker-proto/src && \
+    printf 'fn main() {}\n' > databroker/src/main.rs && \
+    printf 'pub fn dummy() {}\n' > databroker-proto/src/lib.rs
+
+# Build dependencies only
+RUN cargo build --release --package databroker || true
+
+# Now copy the real source code
+COPY ProjectFiles ./
+
+# Build with actual sources
 RUN cargo build --release --package databroker
 
-# --- Step 2: Set up the Python Runtime Environment ---
+
+# ---------- Stage 2: Python runtime ----------
 FROM python:3.11-slim
+
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y libssl-dev ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y \
+    libssl-dev \
+    ca-certificates \
+    gcc \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# 1. Copy the Rust binary (This path is correct based on Stage 1)
 COPY --from=builder /app/ProjectFiles/target/release/databroker /usr/local/bin/databroker
 
-# 2. THE FIX: Copying the Python files. 
-# Using a wildcard or a more direct path to ensure we hit the folder
 COPY ProjectFiles/databroker/kuksa-ditto /app/kuksa-ditto/
 
-# 3. Install requirements
-RUN if [ -f /app/kuksa-ditto/requirements.txt ]; then \
-    pip install --no-cache-dir -r /app/kuksa-ditto/requirements.txt; \
-    fi
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir \
+    kuksa-client==0.4.1 \
+    eclipse-zenoh \
+    paho-mqtt \
+    flask \
+    requests
 
-# 4. Copy configuration
 RUN mkdir -p /app/config
-# Using a wildcard match to avoid case-sensitivity or pathing "not found" errors
 COPY ProjectFiles/databroker/OBD.json /app/config/OBD.json
 
-EXPOSE 1883 8080 7447
-CMD ["databroker"]
+COPY ProjectFiles/databroker/kuksa-ditto/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+EXPOSE 1883 8080 7447 55555
+
+ENTRYPOINT ["entrypoint.sh"]
