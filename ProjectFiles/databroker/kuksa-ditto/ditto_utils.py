@@ -1,6 +1,6 @@
 import requests
 
-THINGS_URL = "http://localhost:8080/api/2"
+THINGS_URL = "http://ditto-gateway:8080/api/2"
 DITTO_AUTH = ("ditto", "ditto")
 THING_ID = "org.ovin:my-vehicle"
 class DittoClient:

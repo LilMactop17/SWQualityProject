@@ -6,8 +6,8 @@ import requests
 
 
 
-thingsURL = "http://localhost:8080/api/2/things/"
-policiesURL = "http://localhost:8080/api/2/policies/"
+thingsURL = "http://ditto-gateway-1:8080/api/2/things/"
+policiesURL = "http://ditto-gateway-1:8080/api/2/policies/"
 auth = ("ditto" , "ditto")
 
 def get_thing(thingID):

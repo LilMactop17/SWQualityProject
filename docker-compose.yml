@@ -1,42 +1,88 @@
 version: '3.8'
 
 services:
-  # The Brain: Kuksa Databroker
   databroker:
     image: ghcr.io/eclipse-kuksa/kuksa-databroker:main
-    container_name: databroker
     ports:
       - "55555:55555"
     volumes:
-      - ./ProjectFiles/databroker/OBD.json:/app/OBD.json
-    command: --insecure --address 0.0.0.0 --port 55555 --metadata /app/OBD.json
+      - ./ProjectFiles/databroker/OBD.json:/app/kuksa-ditto/OBD.json
+    command: --insecure --address 0.0.0.0 --port 55555 --metadata /app/kuksa-ditto/OBD.json
 
-  # The Simulator: Sends data to Databroker
-  data-sender:
+  base-app:
     build: .
-    container_name: data-sender
+    image: obd-system-base
+    entrypoint: ["echo", "Base image built"]
+
+  # NEW: Runs once to prepare Ditto before the bridge starts
+  ditto-setup:
+    image: obd-system-base
     depends_on:
-      - databroker
-    command: python3 /app/kuksa-ditto/send_obd_data_to_kuksa.py
+      - base-app
+      - ditto-gateway
     environment:
-      - KUKSA_HOST=databroker
+      - DITTO_URL=http://ditto-gateway:8080/api/2
+    command: python3 /app/kuksa-ditto/ditto-setup.py
 
-  # The Gateway: Your SoVD API
+  data-sender:
+    image: obd-system-base
+    depends_on:
+      - base-app
+      - databroker
+    # We point this to the service name 'databroker'
+    environment:
+      - KUKSA_DATA_BROKER_ADDR=databroker
+      - KUKSA_DATA_BROKER_PORT=55555
+    command: python3 /app/kuksa-ditto/send_obd_data_to_kuksa.py
+
   sovd-server:
-    build: .
-    container_name: sovd-server
+    image: obd-system-base
     ports:
       - "8888:8081"
     depends_on:
+      - base-app
       - databroker
-    command: python3 /app/kuksa-ditto/sovd-server.py
+      - ditto-gateway
     environment:
-      - KUKSA_HOST=databroker
+      - DITTO_URL=http://ditto-gateway:8080/api/2
+    command: python3 /app/kuksa-ditto/sovd-server.py
 
-  # The Bridge: Kuksa to Zenoh (if separate)
   zenoh-bridge:
-    build: .
-    container_name: zenoh-bridge
+    image: obd-system-base
     depends_on:
+      - base-app
       - databroker
-    command: python3 /app/kuksa-ditto/kuksa_to_zenoh.py
+      - ditto-gateway
+      - ditto-setup
+    environment:
+      - DITTO_API_URL=http://ditto-gateway:8080/api/2
+    command: python3 /app/kuksa-ditto/zenoh_to_ditto.py
+    
+  # --- DITTO STACK ---
+  mongodb:
+    image: mongo:4.4
+    container_name: ditto-mongodb
+
+  ditto-gateway:
+    image: eclipse/ditto-gateway:3.0.0
+    container_name: ditto-gateway
+    ports:
+      - "8082:8080"
+    environment:
+      - BIND_HOSTNAME=0.0.0.0
+      - MONGO_DB_HOSTNAME=mongodb
+    depends_on:
+      - mongodb
+
+  ditto-things:
+    image: eclipse/ditto-things:3.0.0
+    container_name: ditto-things
+    environment:
+      - MONGO_DB_HOSTNAME=mongodb
+    depends_on:
+      - mongodb
+    
+networks:
+  shared_ditto_net:
+    external: true
+    name: swqualityprojectattempt2_default  # Put the name from Step 1 here

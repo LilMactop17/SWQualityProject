@@ -2,7 +2,6 @@ from ditto_utils import DittoClient, THING_ID, THINGS_URL, DITTO_AUTH
 import zenoh
 import requests
 import json
-import time
 
 client = DittoClient(THINGS_URL, DITTO_AUTH)
 setup_url = "http://localhost:8080/api/2/things/org.ovin:my-vehicle"
@@ -175,5 +174,4 @@ conf.insert_json5("connect/endpoints", '["tcp/127.0.0.1:7447"]')
 with zenoh.open(conf) as z_session:
     print(f"Subscribing to Zenoh and forwarding to Ditto ({THING_ID})...")
     sub = z_session.declare_subscriber("Vehicle/OBD/**", handle_zenoh_update)
-    while True:
-        time.sleep(1)
+    input("Press Enter to stop the bridge and exit...\n")
