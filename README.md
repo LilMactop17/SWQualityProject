@@ -91,3 +91,10 @@ venv\Scripts\activate
 python sovd-server.py
 ```
 Keep this running in the background
+
+# 7: Open Ditto
+## Go to localhost:8080 and follow the steps to login
+
+# 8: GET car values from OpenSOVD
+## Go to localhost:8081
+## Click on the links to get a specific car variable at that given moment
